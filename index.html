@@ -1,0 +1,370 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Генератор персонажей</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:12px;background:#10131c;color:#edf0fa;font:15px Arial,sans-serif}
+main{max-width:650px;margin:auto}
+h1{text-align:center;color:#c5a2ff;font-size:25px}
+h2{font-size:17px;color:#c5a2ff;margin:10px 0}
+button{width:100%;padding:14px;border:0;border-radius:10px;background:#8255d9;color:white;font-size:16px;font-weight:bold;margin:6px 0}
+.panel,.card{background:#1b2130;border:1px solid #343e54;border-radius:12px;padding:12px;margin:10px 0}
+.line{padding:7px 0;border-bottom:1px solid #30394b}
+.muted{color:#aeb8ca;font-size:13px}
+.score{color:#80e4a5;font-weight:bold}
+.total{font-size:23px;color:#80e4a5;font-weight:bold;margin:7px 0}
+.yellow{border:2px solid #e7c34e;background:#382f16}
+.red{border:2px solid #ed6868;background:#3b1c24}
+.purple{border:2px solid #b66cff;background:#321b4d}
+details{margin-top:8px}
+summary{color:#c5a2ff;cursor:pointer;padding:8px 0}
+</style>
+</head>
+<body>
+<main>
+<h1>⚔️ Генератор персонажей</h1>
+<button onclick="generate()">🎲 СОЗДАТЬ ПЕРСОНАЖА</button>
+<div id="output"></div>
+</main>
+
+<script>
+const races=[
+["Обычный ангел",10000],["Высший ангел",50000],
+["Обычный демон",15000],["Архидемон",45000],
+["Человек",100],["Обычный минк",500],["Полный минк",4000],
+["Гибрид D",120],["Гибрид C",200],["Гибрид B",400],
+["Гибрид A",10000],["Гибрид S",30000],
+["Обычный драконорожденный",6000],["Высший драконорожденный",25000]
+];
+
+const magics=[
+["Свет",60,7000],["Тьма",60,3000],["Затмение",40,15000],
+["Галаграммы",10,60000],["Универсальная",1,777777777],
+["Призыв дракона",4,90000],["Вода",70,6000],["Огонь",80,5000],
+["Лёд",60,12000],["Земля",90,2000],["Молния",40,15000],
+["Порталы",30,5000],["Радиация",20,90000],
+["Безграничность",30,9000],["Природа",6,50000],
+["Поглощение стали",40,9000],["Стирание",1.5,90000000]
+];
+
+const weapons=[
+["Проклятая двойная катана",5,50000],
+["Якорь акулы",40,9000],["Ледяное копьё",30,6000],
+["Голографическая коса",20,20000],["Голографическая панель",20,20000],
+["Светлая нагината",25,15000],["Берсерк",50,5000],
+["Сердце дракона",10,60000],["Огнестрел",60,900],
+["Нож",90,20],["Огненная катана",40,7000],
+["Радиоактивная базука",35,4000],["Молот",70,3000]
+];
+
+const artifacts=[
+["Антимагия",.1,1000000],
+["Антирегенерация",.5,1000000],
+["Увеличение всех характеристик",10,50000],
+["Скорость",60,10000],["Сила",40,150000],
+["Ночное зрение",70,5000],["Желания",.01,1e24],
+["Камень огня",5,30000],["Камень бури",5,30000],
+["Камень земли",5,30000],["Камень ветра",5,30000],
+["Камень воды",5,30000],["Все камни",1,500000]
+];
+
+const styles=[
+["Железный кулак",5,50000],
+["Искусство сангвина",3,140000],
+["Созидание",4,130000],["Военный",60,2000],
+["Обычный",50,120],["Сверхчеловек",30,5000]
+];
+
+const specialTech=[
+["Магический гибрид",3.33,30000],
+["Шесть глаз",3.33,5000],
+["Космическая сущность",3.34,10000]
+];
+
+const cards=[
+{name:"Тим",race:"Гибрид S",
+magic:["Универсальная","Поглощение стали","Природа"],
+weapon:["Проклятая двойная катана","Берсерк","Светлая нагината"],
+effect:"Восстановление здоровья",
+style:["Железный кулак","Искусство сангвина"],
+special:"Магический гибрид"},
+
+{name:"Вика",race:"Обычный демон",
+magic:["Галаграммы"],
+weapon:["Голографическая коса","Голографическая панель"],
+style:["Обычный"],special:"Космическая сущность"},
+
+{name:"Даша",race:"Полный минк",
+magic:[],weapon:[],style:["Обычный"],special:"Ничего"},
+
+{name:"Эрен",race:"Человек",
+magic:[],weapon:["Огнестрел","Пистолет","Пулемёт","Миниган","Нож"],
+style:["Военный"]},
+
+{name:"Годжо",race:"Человек",
+magic:["Безграничность"],
+weapon:["Проклятая двойная катана"],
+effect:"Усиление",style:["Сверхчеловек"],special:"Шесть глаз"},
+
+{name:"Милан",race:"Высший драконорожденный",
+magic:["Порталы","Огонь"],
+weapon:["Сердце дракона","Проклятая двойная катана"],
+effect:"Антирегенерация",style:["Сверхчеловек"]},
+
+{name:"Хаус",race:"Высший драконорожденный",
+magic:["Огонь"],weapon:[],style:["Сверхчеловек"]},
+
+{name:"Лиза",race:"Гибрид A",
+magic:["Вода"],weapon:["Якорь акулы"],
+style:["Сверхчеловек"],special:"Магический гибрид"},
+
+{name:"Дэн",race:"Обычный ангел",
+magic:["Лёд"],weapon:["Ледяное копьё"],special:"Ничего"}
+];
+
+const rand=n=>Math.random()*100<n;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>[...a].sort(()=>Math.random()-.5);
+const fmt=n=>Number(n).toLocaleString("ru-RU",{maximumFractionDigits:2});
+
+function weightedMagicCount(){
+ return rand(20)?0:rand(10)?3:rand(30)?2:rand(50)?1:0;
+}
+
+function rollMagics(count){
+ return shuffle(magics.filter(x=>rand(x[1])).map(x=>x[0])).slice(0,count);
+}
+
+function rollWeapons(){
+ if(rand(50))return [];
+ return shuffle(weapons.filter(x=>rand(x[1]))).slice(0,2).map(x=>x[0]);
+}
+
+function rollArtifacts(){
+ if(rand(50))return [];
+ let out=[];
+ if(rand(1))out.push("Все камни");
+ else{
+  for(const a of artifacts){
+   if(a[0]==="Все камни")continue;
+   if(rand(a[1]))out.push(a[0]);
+  }
+ }
+ return shuffle(out).slice(0,3);
+}
+
+function rollStyle(){
+ const s=styles.filter(x=>rand(x[1])).map(x=>x[0]);
+ return s.length?[pick(s)]:[];
+}
+
+function rollSpecial(){
+ const r=Math.random()*100;
+ if(r<90)return "Ничего";
+ if(r<93.33)return "Магический гибрид";
+ if(r<96.66)return "Шесть глаз";
+ return "Космическая сущность";
+}
+
+function getFirearm(){
+ const a=[];
+ if(rand(60))a.push("Пистолет");
+ if(rand(50))a.push("Пулемёт");
+ if(rand(40))a.push("Миниган");
+ return a.length?pick(a):"";
+}
+
+function matchCard(c,p){
+ let hits=0,required=0,details=[];
+
+ function test(label,ok){
+  required++;
+  if(ok)hits++;
+  details.push((ok?"✅ ":"❌ ")+label);
+ }
+
+ test("Раса: "+c.race,p.race===c.race);
+
+ if(p.race!==c.race){
+  return {
+   card:c,hits:0,required,
+   details:["❌ Раса не совпала — остальные пункты не засчитываются"]
+  };
+ }
+
+ if(c.magic){
+  test("Магия: "+(c.magic.join(", ")||"Ничего"),
+   c.magic.length===0?p.magic.length===0:
+   c.magic.some(x=>p.magic.includes(x)));
+ }
+
+ if(c.weapon){
+  let ok=c.weapon.length===0?p.weapon.length===0:
+   c.weapon.some(x=>p.weapon.includes(x)||x===p.firearm);
+
+  if(ok&&c.effect&&c.weapon.includes("Проклятая двойная катана")){
+   ok=p.effect===c.effect;
+  }
+
+  test("Оружие: "+(c.weapon.join(", ")||"Ничего")+
+   (c.effect?" / "+c.effect:""),ok);
+ }
+
+ if(c.style){
+  test("Боевой стиль: "+c.style.join(" или "),
+   c.style.some(x=>p.style.includes(x)));
+ }
+
+ if(c.special){
+  test("Особая техника: "+c.special,c.special===p.special);
+ }
+
+ return {card:c,hits,required,details};
+}
+
+function generate(){
+ const race=pick(races);
+ const magic=rollMagics(weightedMagicCount());
+ const weapon=rollWeapons();
+
+ const firearm=weapon.includes("Огнестрел")?getFirearm():"";
+
+ const effect=weapon.includes("Проклятая двойная катана")?
+  pick(["Антирегенерация","Восстановление здоровья","Усиление"]):"";
+
+ const ownership=Math.floor(Math.random()*100)+1;
+ const art=rollArtifacts();
+ const style=rollStyle();
+ const special=rollSpecial();
+
+ const p={
+  race:race[0],magic,weapon,firearm,effect,
+  ownership,art,style,special
+ };
+
+ const raceScore=race[1];
+ const magicScore=magic.reduce((s,n)=>
+  s+(magics.find(x=>x[0]===n)?.[2]||0),0);
+
+ let weaponScore=0;
+ let weaponLines=[];
+
+ for(const w of weapon){
+  const base=weapons.find(x=>x[0]===w)[2];
+  const adjusted=base*(1+.003*ownership);
+  weaponScore+=adjusted;
+  weaponLines.push([w,base,adjusted]);
+ }
+
+ const hologramPair=
+  weapon.includes("Голографическая коса")&&
+  weapon.includes("Голографическая панель");
+
+ if(hologramPair)weaponScore*=2;
+
+ const artScore=art.reduce((s,n)=>
+  s+(artifacts.find(x=>x[0]===n)?.[2]||0),0);
+
+ const styleScore=style.length?
+  styles.find(x=>x[0]===style[0])[2]:100;
+
+ const specialScore=special==="Магический гибрид"?
+  (race[0].startsWith("Гибрид")?30000:0):
+  specialTech.find(x=>x[0]===special)?.[2]||0;
+
+ const base=raceScore+magicScore+weaponScore+
+  artScore+styleScore+specialScore;
+
+ const name=weapon.length&&magic.includes("Порталы")?"Милан":
+  !weapon.length&&magic.includes("Огонь")?"Хаус":"Безымянный";
+
+ const results=cards.map(c=>matchCard(c,p));
+ const two=results.filter(x=>x.hits===2).length;
+ const best=Math.max(...results.map(x=>x.hits));
+
+ const full=results.some(x=>x.hits===x.required);
+ const cardBoost=full?10:best===4?5:best===3?3:1;
+ const groupBoost=two>=2?1.5:1;
+ const total=base*cardBoost*groupBoost;
+
+ document.getElementById("output").innerHTML=`
+ <section class="panel">
+ <h2>👤 ${name}</h2>
+
+ <div class="line">Раса: <b>${p.race}</b>
+ <span class="score">+${fmt(raceScore)}</span></div>
+
+ <div class="line">Магия: ${magic.join(", ")||"Ничего"}
+ <span class="score">+${fmt(magicScore)}</span></div>
+
+ <div class="line"><b>Оружие:</b></div>
+
+ ${weaponLines.length?weaponLines.map(([n,b,a])=>
+  `<div class="line">${n}: ${fmt(b)} × ${ownership}% владения =
+  <span class="score">${fmt(a)}</span></div>`).join("")
+  :`<div class="line">Ничего</div>`}
+
+ ${firearm?`<div class="line">Подтип огнестрела: ${firearm}</div>`:""}
+
+ ${hologramPair?`<div class="line">Бонус пары голограмм: ×2</div>`:""}
+
+ ${effect?`<div class="line">Действие катаны: ${effect}</div>`:""}
+
+ <div class="line">Артефакты: ${art.join(", ")||"Ничего"}
+ <span class="score">+${fmt(artScore)}</span></div>
+
+ <div class="line">Боевой стиль: ${style[0]||"Ничего"}
+ <span class="score">+${fmt(styleScore)}</span></div>
+
+ <div class="line">Особая техника: ${special}
+ <span class="score">+${fmt(specialScore)}</span></div>
+
+ <hr>
+ <div class="muted">Очки до бустеров</div>
+ <div class="total">${fmt(base)}</div>
+ <div class="line">Бустер карточек: ×${cardBoost}</div>
+ <div class="line">Общий бустер за несколько карточек с 2 совпадениями: ×${groupBoost}</div>
+ <div class="total">ИТОГО: ${fmt(total)}</div>
+ </section>
+
+ <h2>⭐ Особые карточки</h2>
+
+ ${results.map(x=>{
+  const isFull=x.hits===x.required;
+  const cls=isFull?"purple":
+   x.hits>=3?"red":
+   x.hits===2?"yellow":"";
+
+  const boost=isFull?10:
+   x.hits===4?5:
+   x.hits===3?3:1;
+
+  return `
+  <section class="card ${cls}">
+   <b>${x.card.name}</b> — ${x.hits}/${x.required}
+
+   <div class="muted">
+    ${isFull?"ПОЛНОЕ СОВПАДЕНИЕ":
+     x.hits===4?"4 совпадения":
+     x.hits===3?"3 совпадения":
+     x.hits===2?"2 совпадения":""}
+   </div>
+
+   <details>
+    <summary>Показать совпадения и недостающее</summary>
+    ${x.details.map(d=>`<div class="line">${d}</div>`).join("")}
+   </details>
+
+   ${x.hits>=2?
+    `<div class="score">Бустер карточки: ×${boost}</div>`:""}
+  </section>`;
+ }).join("")}
+ `;
+}
+</script>
+</body>
+</html>
